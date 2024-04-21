@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import playerList from './player_list.js';
+import logo from './logo.svg';
+import './App.css';
 
 function FortnitePlayerStats() {
   const [playerStats, setPlayerStats] = useState([]);
@@ -31,14 +33,14 @@ function FortnitePlayerStats() {
             const kd = data.data.stats ? parseFloat(data.data.stats.all.overall.kd).toFixed(2) : 'N/A';
             const matches = data.data.stats ? data.data.stats.all.overall.matches : 'N/A';
             console.log(`Matches for ${playerName}:`, matches); // Add this line to log matches
-            
+
             allStats.push({ name: playerName, level, kd, matches });
           } catch (error) {
             console.error(`Error fetching stats for player ${playerName}:`, error);
             allStats.push({ name: playerName, level: 'N/A', kd: 'N/A', matches: 'N/A' });
           }
           // Introduce a delay of 1 second between each request
-          await new Promise(resolve => setTimeout(resolve, 1000));
+          await new Promise(resolve => setTimeout(resolve, 700));
         }
         // Sort the playerStats array by level in descending order
         allStats.sort((a, b) => b.level - a.level);
@@ -59,7 +61,11 @@ function FortnitePlayerStats() {
   }, []);
 
   if (loading) {
-    return <div>Loading...</div>;
+    return (<div>
+      <img src={logo} className="App-logo" alt="logo" />
+      <br/>Loading...
+    </div>
+      )
   }
 
   if (error) {
@@ -71,19 +77,23 @@ function FortnitePlayerStats() {
   }
 
   return (
-    <div style={{ textAlign: 'left' }}>
+    <div style={{ textAlign: 'left', padding: '10px' }}>
       <h1>Fortnite Player Stats by K/D</h1>
-      {kdStats.map((player, index) => (
-        <div key={index} style={{ backgroundColor: 'black', color: 'white', padding: '10px', marginBottom: '10px', textAlign: 'left' }}>
-          {index + 1}. {player.name}, <strong>K/D:</strong> {player.kd}, <strong>Level:</strong> {player.level} <strong>Games Played:</strong> {player.matches}
-        </div>
-      ))}
+      <div >
+        {kdStats.map((player, index) => (
+          <div key={index} style={{ backgroundColor: 'black', color: 'white', padding: '10px', marginBottom: '10px', textAlign: 'left'}}>
+            {index + 1}. {player.name}, <strong>K/D:</strong> {player.kd}, <strong>Level:</strong> {player.level} <strong>Games Played:</strong> {player.matches}
+          </div>
+        ))}
+      </div>
       <h1>Fortnite Player Level</h1>
-      {playerStats.map((player, index) => (
-        <div key={index} style={{ backgroundColor: 'black', color: 'white', padding: '10px', marginBottom: '10px', textAlign: 'left' }}>
-          {index + 1}. {player.name}, <strong>Level:</strong> {player.level}, <strong>K/D:</strong> {player.kd} <strong>Games Played:</strong> {player.matches}
-        </div>
-      ))}
+      <div >
+        {playerStats.map((player, index) => (
+          <div key={index} style={{ backgroundColor: 'black', color: 'white', padding: '10px', marginBottom: '10px', textAlign: 'left' }}>
+            {index + 1}. {player.name}, <strong>Level:</strong> {player.level}, <strong>K/D:</strong> {player.kd} <strong>Games Played:</strong> {player.matches}
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
