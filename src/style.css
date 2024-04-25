@@ -1,0 +1,105 @@
+/* Existing CSS */
+
+.backgroundImage {
+  background-image: url('./fortbackgrey.jpg');
+  background-size: cover;
+  background-position: center;
+  width: 100vw;
+  height: 100vh; /* Set a fixed height to fill the viewport */
+  overflow-y: scroll;
+  overflow-x: hidden;
+}
+.backgroundImageLoad {
+  background-image: url('./fortbackgrey.jpg');
+  background-size: cover;
+  background-position: center;
+  width: 100vw;
+  height: 100vh; /* Set a fixed height to fill the viewport */
+  overflow: hidden;
+}
+
+.centeredDiv {
+  position: absolute; /* or absolute */
+  top: 50%;
+  left: 50%;
+  right: 50%;
+  bottom:50%;
+  padding-top: 150px;
+  transform: translate(-50%, -50%);
+  text-align: center; /* Horizontally center the content */
+
+}
+
+.headerTextColor {
+  font-size: xxx-large;
+  color: #FFF9C4;
+}
+
+.rankingText {
+  background-color: #E0F7FA;
+  color: black;
+  padding: 10px;
+  text-align: left;
+  border-radius: 0 200px 200px 0;
+  position: relative
+}
+
+.rankingText:hover {
+  background-color: #b4ecf3  ;
+}
+
+.displaySizing {
+  padding-left: 10%;
+  padding-right: 10%;
+}
+
+.nameFont {
+  font-size: 7.2vmin;
+  color: #F9A825;
+  white-space: nowrap;
+}
+
+.statsFont {
+  font-size: 5vmin;
+  color: black;
+  white-space: ;
+}
+.statsFontExpand {
+  font-size: 4vmin;
+  color: black;
+  bottom:0;
+  margin:0;
+  padding:0;
+}
+
+.numberFont {
+  font-size: xx-large;
+  color: black;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.expandedText {
+  background-color: #9ee6ef  ;
+  color: black;
+  padding:0 ;
+  text-align: ;
+  padding-top: 40px;
+  padding-bottom: 5px;
+  border-radius: 0 200px 200px 0;
+  transform: translateY(-30px);
+  position:relative;
+  width: 100%; /* Ensure it spans the entire width of its container */
+  bottom:0;
+
+}
+
+.upZ{
+  z-index: 4;
+  position: relative
+}
+.downZ{
+  z-index: 1;
+  position: relative
+}

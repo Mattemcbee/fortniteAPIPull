@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import axios from 'axios'; // Import axios if you choose to use it
 import playerList from './player_list.js';
 import logo from './logo.svg';
 import './App.css';
@@ -50,6 +51,8 @@ function FortnitePlayerStats() {
         const kdSort = [...allStats]; // Create a copy of allStats array
         kdSort.sort((a, b) => b.kd - a.kd);
         setkdStats(kdSort); // Set kdSort to kdStats state
+
+        
       } catch (error) {
         setError(error.message);
       } finally {
@@ -60,12 +63,15 @@ function FortnitePlayerStats() {
     fetchPlayerStats();
   }, []);
 
+  
+
   if (loading) {
-    return (<div>
-      <img src={logo} className="App-logo" alt="logo" />
-      <br/>Loading...
-    </div>
-      )
+    return (
+      <div>
+        <img src={logo} className="App-logo" alt="logo" />
+        <br />Loading...
+      </div>
+    );
   }
 
   if (error) {
@@ -79,15 +85,15 @@ function FortnitePlayerStats() {
   return (
     <div style={{ textAlign: 'left', padding: '10px' }}>
       <h1>Fortnite Player Stats by K/D</h1>
-      <div >
+      <div>
         {kdStats.map((player, index) => (
-          <div key={index} style={{ backgroundColor: 'black', color: 'white', padding: '10px', marginBottom: '10px', textAlign: 'left'}}>
+          <div key={index} style={{ backgroundColor: 'black', color: 'white', padding: '10px', marginBottom: '10px', textAlign: 'left' }}>
             {index + 1}. {player.name}, <strong>K/D:</strong> {player.kd}, <strong>Level:</strong> {player.level} <strong>Games Played:</strong> {player.matches}
           </div>
         ))}
       </div>
       <h1>Fortnite Player Level</h1>
-      <div >
+      <div>
         {playerStats.map((player, index) => (
           <div key={index} style={{ backgroundColor: 'black', color: 'white', padding: '10px', marginBottom: '10px', textAlign: 'left' }}>
             {index + 1}. {player.name}, <strong>Level:</strong> {player.level}, <strong>K/D:</strong> {player.kd} <strong>Games Played:</strong> {player.matches}

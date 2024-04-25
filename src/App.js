@@ -1,15 +1,13 @@
-import logo from './logo.svg';
-import './App.css';
-import FortnitePlayerStats from './FortnitePlayerStats.js'
-import Display from './displayScores.js';
+import './style.css';
+import Display from './display.js'
+import { Container } from 'react-bootstrap';
+import 'bootstrap/dist/css/bootstrap.min.css';
 
 function App() {
   return (
-    <div className="App">
-      <header className="App-header">
-        <FortnitePlayerStats/>
-      </header>
-    </div>
+    <Container fluid className="backgroundImage" >
+      <Display />
+    </Container>
   );
 }
 
