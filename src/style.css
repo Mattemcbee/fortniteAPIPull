@@ -1,5 +1,13 @@
-/* Existing CSS */
+:root {
+  --color1: #282b2c ; 
+  --color2: #FFF9C4 ; 
+  --color3: white ; 
+  --color4: #f8fdfe ;
+  --color5: #b3c5c8   ;
+  --color6: #E0F7FA ; 
 
+
+}
 .backgroundImage {
   background-image: url('./fortbackgrey.jpg');
   background-size: cover;
@@ -7,28 +15,27 @@
   width: 100vw;
   height: 100vh; /* Set a fixed height to fill the viewport */
   overflow-y: scroll;
-  overflow-x: hidden;
 }
+
+
 .backgroundImageLoad {
   background-image: url('./fortbackgrey.jpg');
   background-size: cover;
   background-position: center;
   width: 100vw;
-  height: 100vh; /* Set a fixed height to fill the viewport */
+  height: 100vh;
   overflow: hidden;
 }
 
 .centeredDiv {
-  position: absolute; /* or absolute */
+  position: fixed;
   top: 50%;
   left: 50%;
-  right: 50%;
-  bottom:50%;
-  padding-top: 150px;
   transform: translate(-50%, -50%);
-  text-align: center; /* Horizontally center the content */
-
+  text-align: center;
+  padding-top: 120px;
 }
+
 
 .headerTextColor {
   font-size: xxx-large;
@@ -45,7 +52,7 @@
 }
 
 .rankingText:hover {
-  background-color: #b4ecf3  ;
+  background-color: #b4ecf3;
 }
 
 .displaySizing {
@@ -59,17 +66,37 @@
   white-space: nowrap;
 }
 
+
+
+.statsFontExpandTag {
+  font-size: 4vmin;
+  font-style: italic;
+  color: black;
+  bottom: 0;
+  margin: 0;
+  padding: 0;
+}
+
+.tagFont {
+  font-size: 3vmin;
+  font-style: italic;
+  color:var(--color1);
+  margin-top: 30px;
+  padding: 0;
+}
+
 .statsFont {
   font-size: 5vmin;
   color: black;
   white-space: ;
 }
+
 .statsFontExpand {
   font-size: 4vmin;
   color: black;
-  bottom:0;
-  margin:0;
-  padding:0;
+  bottom: 0;
+  margin: 0;
+  padding: 0;
 }
 
 .numberFont {
@@ -81,25 +108,123 @@
 }
 
 .expandedText {
-  background-color: #9ee6ef  ;
+  background-color: #9ee6ef;
   color: black;
-  padding:0 ;
+  padding: 0;
   text-align: ;
   padding-top: 40px;
   padding-bottom: 5px;
   border-radius: 0 200px 200px 0;
   transform: translateY(-30px);
-  position:relative;
-  width: 100%; /* Ensure it spans the entire width of its container */
-  bottom:0;
+  position: relative;
+  width: 100%;
+  /* Ensure it spans the entire width of its container */
+  bottom: 0;
 
 }
 
-.upZ{
+.upZ {
   z-index: 4;
   position: relative
 }
-.downZ{
+
+.downZ {
   z-index: 1;
   position: relative
+}
+
+.headerTextColorComparison {
+  font-size: xx-large;
+  color:var(--color2);
+  font-size: 7vmin;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 1);
+  margin-top: 30px;
+
+}
+
+@keyframes App-logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+
+
+.fade-in {
+  animation: fadeInAnimation 0.3s ease-in-out;
+}
+
+@keyframes fadeInAnimation {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+.inspoText {
+  font-size: x-large;
+  margin-top: 30px;
+  color:var(--color2);
+  font-style: italic;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 1);
+
+}
+
+.yellowRow {
+  color: yellow;
+  font-size: 5vmin;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 1);
+
+
+}
+
+.chart-container {
+  position: relative;
+  width: 100%;
+  height: 80vmin; /* Ensure the height is set */
+}
+
+
+
+
+.otherRow {
+  color:var(--color2);
+  font-size: 5vmin;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 1);
+
+
+}
+
+.headerTextColorComparisonContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.graphBackground{
+  background-color: rgba(0, 0, 0, 0.9);
+  border-radius: 30px;
+  color: white;
+}
+.buttonColor  {
+  font-size: x-large;
+  margin-top: 30px;
+  color:var(--color2);
+  background-color:var(--color1) ;
+
+}
+.minutesText {
+  color: var(--color5);
+  font-size: 4vmin;
+  text-shadow: 2px 2px #282b2c; /* You can adjust the offset and color as needed */
+}
+.minutesTextEven {
+  color: var(--color6);
+  font-size: 4vmin;
+  text-shadow: 2px 2px #282b2c; /* You can adjust the offset and color as needed */
+}
+.minutesHeaderText {
+  color: var(--color6);
+  font-size: 6vmin;
+  text-shadow: 2px 2px #282b2c; /* You can adjust the offset and color as needed */
 }
