@@ -82,7 +82,7 @@ function PlayerWinChart({ wins }) {
 
   return (
     <>
-      <h1 className='headerTextColorComparison text-center'>Wins This Season</h1>
+      <h2 className='headerTextColorComparison text-center'>Wins This Season</h2>
       <Container fluid className="chart-container" style={{ height: '70vmin', width: '' }}>
         <canvas ref={chartRef} style={{ height: '100%', width:'100%' }} />
       </Container>

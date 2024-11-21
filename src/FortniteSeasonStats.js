@@ -8,20 +8,39 @@ import killList from './total_kill_list.js';
 import PlayerStatsChart from './playerStatsChart.jsx';
 import PlayerWinChart from './playerWinChart.jsx';
 import CombinedList from './minutesDisplay.jsx';
-import playerStatsForChart from './player_stats.js'
+import playerStatsForChart from './player_stats.js';
+import OldSeasonDisplay from './oldSeasonDisplay.jsx';
+import Popup from './popup.jsx'; // Import the Popup component
+import Webdown from './webdown'
+import Email from './email.js'
 
-function SeasonStats() {
+function SeasonStats({ isBlackAndWhite, toggleTheme }) {
   const [playerStats, setPlayerStats] = useState([]);
   const [kdStats, setkdStats] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [expandedPlayerIndex, setExpandedPlayerIndex] = useState(-1);
   const [totalKills, setTotalKills] = useState(0);
+  const [totalMatches, setTotalMatches] = useState(0); // Add state for total matches
   const [showKillList, setShowKillList] = useState(false);
+  const [showOldSeason, setShowOldSeason] = useState(false);
+  const [showPopup, setShowPopup] = useState(true);
 
   const togglePlayerExpand = index => {
     setExpandedPlayerIndex(expandedPlayerIndex === index ? -1 : index);
   };
+
+  const toggleOldSeasonDisplay = () => {
+    setShowOldSeason(prevShowOldSeason => !prevShowOldSeason);
+  };
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowPopup(false);
+    }, 15000); // 15 seconds
+
+    return () => clearTimeout(timer); // Cleanup timer on unmount
+  }, []);
 
   const fetchSeasonStats = async () => {
     try {
@@ -45,10 +64,10 @@ function SeasonStats() {
           const kd = stats.kd ? parseFloat(stats.kd).toFixed(2) : 'N/A';
           const kills = stats.kills ? parseFloat(stats.kills) : 'N/A';
           const wins = stats.wins ? parseFloat(stats.wins) : 'N/A';
-          const matches = stats.matches ? stats.matches : 'N/A';
+          const matches = stats.matches ? stats.matches : 0; // Ensure matches is a number
           const scorePerMatch = stats.scorePerMatch ? stats.scorePerMatch : 'N/A';
           const top3 = stats.top3 ? stats.top3 : 'N/A';
-          const top3per = matches !== 'N/A' ? ((top3 / matches) * 100).toFixed(1) : 'N/A';
+          const top3per = matches !== 0 ? ((top3 / matches) * 100).toFixed(1) : 'N/A';
           const minutesPlayed = stats.minutesPlayed ? stats.minutesPlayed : 'N/A';
 
           allStats.push({
@@ -66,7 +85,7 @@ function SeasonStats() {
           });
         } catch (error) {
           console.error(`Error fetching stats for player ${playerName}:`, error);
-          allStats.push({ name: playerName, level: 'N/A', kd: 'N/A', matches: 'N/A' });
+          allStats.push({ name: playerName, level: 1, kd: 0, matches: 0 });
         }
 
         await new Promise(resolve => setTimeout(resolve, 700));
@@ -78,7 +97,11 @@ function SeasonStats() {
       const totalKills = allStats.reduce((sum, player) => sum + (isNaN(player.kills) ? 0 : parseFloat(player.kills)), 0);
       setTotalKills(totalKills);
 
+      const totalMatches = allStats.reduce((sum, player) => sum + (isNaN(player.matches) ? 0 : parseInt(player.matches)), 0);
+      setTotalMatches(totalMatches); 
+
       const kdSort = [...allStats].sort((a, b) => b.kd - a.kd);
+
       setkdStats(kdSort);
     } catch (error) {
       setError(error.message);
@@ -118,81 +141,165 @@ function SeasonStats() {
 
   const dynamicWinsList = kdStats.map(player => ({ name: player.name, wins: player.wins }));
 
-  return (
-    <Container style={{ textAlign: 'left', padding: '10px', paddingBottom: '40px' }}>
-      <h1 className='headerTextColor'>Season Player Stats by K/D</h1>
-      <Container>
-        {kdStats.map((player, index) => (
-          <div key={index}>
-            <Container className='upZ'>
+
+  // Separate players based on match count
+  const highMatchPlayers = playerStats.filter(player => parseInt(player.matches) >= (totalMatches/7)*.4);
+  const lowMatchPlayers = playerStats.filter(player => parseInt(player.matches) < (totalMatches/7)*.4);
+  //console.log((totalMatches/7)*.4)
+  // Filtered KD stats for players with 10 or more matches
+  const filteredKDStats = kdStats.filter(player => highMatchPlayers.some(p => p.name === player.name));
+
+    return (
+    <>
+      <Container style={{ textAlign: 'left', padding: '10px', paddingBottom: '40px' }}>
+        <Container>
+          {filteredKDStats.map((player, index) => (
+
+            <div key={index}>
+              <Container className='upZ'>
+                <Row
+                  className={`rankingText ${expandedPlayerIndex === index ? 'expanded' : ''}`}
+                  onClick={() => togglePlayerExpand(index)}
+                  style={{ zIndex: 4, marginTop: '10px' }}
+                >
+                  <Col xs='1' className='numberFont'>{index + 1}.</Col>
+                  <Col xs='9'>
+                    <Row>
+                      <Col>
+                        <h1 className='nameFont'>{player.name}</h1>
+                        <h1 className='statsFont'>
+                          <strong>K/D:</strong> {player.kd}, <strong>Level:</strong> {player.level},{' '}
+                          <strong>Games Played:</strong> {player.matches}
+                        </h1>
+                      </Col>
+                    </Row>
+                  </Col>
+                </Row>
+              </Container>
+              {expandedPlayerIndex === index && (
+                <Container className='downZ'>
+                  <Row className='expandedText statsRow' style={{ zIndex: 0 }}>
+                    <Col xs={{ offset: 1, size: 9 }}>
+                      <div className={`statsContainer slide-down`}>
+                        <h3 className='statsFontExpand'>
+                          <h3 className='statsFontExpandTag'>{player.playerTag}</h3>
+                          <strong>Kills:</strong> {player.kills}, <strong>Wins:</strong> {player.wins === 'N/A' ? 0 : player.wins}, <br />
+                          <strong>Top 3:</strong> {player.top3} ({player.top3per}%)
+                        </h3>
+                      </div>
+                    </Col>
+                  </Row>
+                </Container>
+              )}
+            </div>
+          ))}
+        </Container>
+        
+
+       {/* <div className='separator' style={{ borderTop: '2px solid red', margin: '20px 0' }} /> */}
+
+        <Container>
+          {lowMatchPlayers.map((player, index) => (
+            <Container key={index} className='upZ'>
               <Row
-                className={`rankingText ${expandedPlayerIndex === index ? 'expanded' : ''}`}
-                onClick={() => togglePlayerExpand(index)}
+                className={`rankingText ${expandedPlayerIndex === index + highMatchPlayers.length ? 'expanded' : ''}`}
+                onClick={() => togglePlayerExpand(index + highMatchPlayers.length)}
                 style={{ zIndex: 4, marginTop: '10px' }}
               >
-                <Col xs='1' className='numberFont'>{index + 1}.</Col>
+                <Col xs='3' className='alignVertical'>
+                  <h1 style={{color: 'red', fontSize: 'small'}}>NOT ENOUGH MATCHES</h1>
+                </Col>
                 <Col xs='9'>
                   <Row>
                     <Col>
                       <h1 className='nameFont'>{player.name}</h1>
                       <h1 className='statsFont'>
                         <strong>K/D:</strong> {player.kd}, <strong>Level:</strong> {player.level},{' '}
-                        <strong>Games Played:</strong> {player.matches}
+                        <strong>Games:</strong> {player.matches}<span style={{color:'grey', fontSize:'smaller'}}>/{Math.ceil((totalMatches/7)*.4)}</span>
                       </h1>
                     </Col>
                   </Row>
                 </Col>
               </Row>
+              {expandedPlayerIndex === index + highMatchPlayers.length && (
+                <Container fluid className='downZ' style={{marginLeft:'-12px'}}>
+                  <Row className='expandedText statsRow' style={{ zIndex: 0 }}>
+                    <Col xs={{ offset: 1, size: 9 }}>
+                      <div className={`statsContainer slide-down`}>
+                        <h3 className='statsFontExpand'>
+                          <h3 className='statsFontExpandTag'>{player.playerTag}</h3>
+                          <strong>Kills:</strong> {player.kills}, <strong>Wins:</strong> {player.wins === 'N/A' ? 0 : player.wins}, <br />
+                          <strong>Top 3:</strong> {player.top3} ({player.top3per}%)
+                        </h3>
+                      </div>
+                    </Col>
+                  </Row>
+                </Container>
+              )}
             </Container>
-            {expandedPlayerIndex === index && (
-              <Container className='downZ'>
-                <Row className='expandedText statsRow' style={{ zIndex: 0 }}>
-                  <Col xs={{ offset: 1, size: 9 }}>
-                    <div className={`statsContainer slide-down`}>
-                      <h1 className='statsFontExpand'>
-                        <h1 className='statsFontExpandTag'>{player.playerTag}</h1>
-                        <strong>Kills:</strong> {player.kills}, <strong>Wins:</strong> {player.wins === 'N/A' ? 0 : player.wins}, <br />
-                        <strong>Top 3:</strong> {player.top3} ({player.top3per}%)
-                      </h1>
-                    </div>
-                  </Col>
-                </Row>
-              </Container>
-            )}
-          </div>
-        ))}
-      </Container>
-      <Container fluid>
-        <Container className='buttonContainer text-center'>
-          <Button onClick={toggleKillList} className='buttonColor' style={{ color: 'black', backgroundColor: '#FFF9C4' }}>
-            {showKillList ? 'Hide Data' : 'More Data'}
-          </Button>
+          ))}
         </Container>
-        {showKillList && (
-          <>
-            <h1 className='headerTextColorComparison'>Comparison with Historical Deaths:</h1>
-            {updatedKillList.map((kill, index) => (
-              <Row key={index} className={kill.battle === 'Our total kills this season' ? 'yellowRow' : 'otherRow'}>
-                <Col>{kill.battle}</Col>
-                <Col xs='2' className='headerTextColorComparisonContainer'>{kill.deaths}</Col>
-              </Row>
-            ))}
-            <Container fluid style={{ marginTop: '30px' }}>
-              <Row>
-                <Col xs='12' sm='6'>
-                  <PlayerStatsChart data={playerStatsForChart} />
-                </Col>
-                <Col xs='12' sm='6'>
-                  <PlayerWinChart wins={dynamicWinsList} />
-                </Col>
-              </Row>
-              <CombinedList playerStats={playerStats} />
-            </Container>
-          </>
-        )}
+        
+        {/*<Webdown/>*/}
       </Container>
-      <h1 className='tagFont text-center'>Brought to you by Matt. Thank you Matt</h1>
-    </Container>
+
+      <Container fluid className='buttonContainer text-center'>
+        <Row className='' style={{ marginTop: '0px' }}>
+          <Col>
+            <Button
+              onClick={toggleKillList}
+              className='buttonStyle'
+              style={{
+                color: isBlackAndWhite ? 'black' : 'white',
+                backgroundColor: isBlackAndWhite ? 'white' : '#b3c5c8',
+                marginBottom: '20px'
+              }}
+            >
+              {showKillList ? 'Hide Data' : 'More Data'}
+            </Button>
+          </Col>
+          <Col>
+            <Button
+              onClick={toggleOldSeasonDisplay}
+              className='buttonStyle'
+              style={{
+                color: isBlackAndWhite ? 'black' : 'white',
+                backgroundColor: isBlackAndWhite ? 'white' : '#b3c5c8',
+                marginBottom: '20px'
+              }}
+            >
+              {showOldSeason ? 'Hide Old Stats' : 'See Old Stats'}
+            </Button>
+          </Col>
+        </Row>
+        {showOldSeason && <OldSeasonDisplay />}
+      </Container>
+
+      {showKillList && (
+        <>
+          <h2 className='headerTextColorComparison'>Comparison with Historical Deaths:</h2>
+          {updatedKillList.map((kill, index) => (
+            <Row key={index} className={kill.battle === 'Our total kills this season' ? 'yellowRow' : 'otherRow'}>
+              <Col>{kill.battle}</Col>
+              <Col xs='2' className='headerTextColorComparisonContainer'>{kill.deaths}</Col>
+            </Row>
+          ))}
+          <Container fluid style={{ marginTop: '30px' }}>
+            <Row>
+              <Col xs='12' sm='6'>
+                <PlayerStatsChart data={playerStatsForChart} />
+              </Col>
+              <Col xs='12' sm='6'>
+                <PlayerWinChart wins={dynamicWinsList} />
+              </Col>
+            </Row>
+            <CombinedList playerStats={playerStats} />
+          </Container>
+          <Email />
+        </>
+      )}
+      <h2 className='tagFont text-center' style={{marginTop: '30px'}}>Brought to you by Matt. Thank you Matt</h2>
+    </>
   );
 }
 

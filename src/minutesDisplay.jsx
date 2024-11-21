@@ -21,13 +21,13 @@ const CombinedList = ({ playerStats }) => {
 
   return (
     <Container fluid className=''>
-      <h1 className='minutesHeaderText text-center'>Time Playing This Season</h1>
+      <h2 className='minutesHeaderText text-center'>Time Played This Season</h2>
       <Row>
         <Col xs={{ size: 2, offset: 8 }} sm={{ size: 2, offset: 7 }}>
-          <h1 className='minutesTextEven'>Days</h1>
+          <h2 className='minutesTextEven'>Days</h2>
         </Col>
         <Col xs={{ size: 1, offset: 0 }}>
-          <h1 className='minutesTextEven'>Hours</h1>
+          <h2 className='minutesTextEven'>Hours</h2>
         </Col>
       </Row>
       {combinedList.map((item, index) => (
