@@ -32,8 +32,20 @@ const playerStatsDataC5S4 = [
   { name: 'Tommy', level: 77, kd: 5.154, kills: 0, wins: 0, minutesSpent: 0, matches: 115 }
 ];
 
+const playerStatsDataC5S5 = [
+  { name: 'Aaron', level: 83, kd: 3.791, kills: 0, wins: 0, minutesSpent: 0, matches: 145 },
+  { name: 'Andrew', level: 59, kd: 4.568, kills: 0, wins: 0, minutesSpent: 0, matches: 42 },
+  { name: 'Josh', level: 42, kd: 4.210, kills: 0, wins: 0, minutesSpent: 0, matches: 30 },
+  { name: 'Matt', level: 81, kd: 3.377, kills: 0, wins: 0, minutesSpent: 0, matches: 150 },
+  { name: 'Nick', level: 65, kd: 3.554, kills: 0, wins: 0, minutesSpent: 0, matches: 90 },
+  { name: 'Panna', level: 79, kd: 5.213, kills: 0, wins: 0, minutesSpent: 0, matches: 133 },
+  { name: 'Tommy', level: 60, kd: 5.437, kills: 0, wins: 0, minutesSpent: 0, matches: 78 }
+];
+
 const PlayerStatsDisplay = () => {
   const [currentSeason, setCurrentSeason] = useState('C5S2');
+  const [currentSeasonName, setCurrentSeasonName] = useState('Season of Greek');
+
   const [playerStats, setPlayerStats] = useState(playerStatsDataC5S2);
   const [sortConfig, setSortConfig] = useState({ key: 'name', direction: 'descending' });
 
@@ -70,10 +82,20 @@ const PlayerStatsDisplay = () => {
     setCurrentSeason(season);
     if (season === 'C5S2') {
       setPlayerStats(playerStatsDataC5S2);
+      setCurrentSeasonName('Season of Greek Baddies');
+
     } else if (season === 'C5S3') {
       setPlayerStats(playerStatsDataC5S3);
+      setCurrentSeasonName('Season of Car Shenanigans');
+
     } else if (season === 'C5S4') {
       setPlayerStats(playerStatsDataC5S4);
+      setCurrentSeasonName('Season of Marvel Ads');
+
+    }else if (season === 'C5S5') {
+      setPlayerStats(playerStatsDataC5S5);
+      setCurrentSeasonName('Season of Emotion Over Reason');
+
     }
   };
 
@@ -82,18 +104,22 @@ const PlayerStatsDisplay = () => {
       <h2 className='text-center'>Player Stats</h2>
       <Container className="text-center">
         <Row>
-          <Col xs='4'>
+          <Col xs='3'>
             <Button color="secondary" onClick={() => handleSeasonChange('C5S2')}>C5S2</Button>
           </Col>
-          <Col xs='4'>
+          <Col xs='3'>
             <Button color="secondary" onClick={() => handleSeasonChange('C5S3')}>C5S3</Button>
           </Col>
-          <Col xs='4'>
+          <Col xs='3'>
             <Button color="secondary" onClick={() => handleSeasonChange('C5S4')}>C5S4</Button>
+          </Col>
+          <Col xs='3'>
+            <Button color="secondary" onClick={() => handleSeasonChange('C5S5')}>C5S5</Button>
           </Col>
 
         </Row>
       </Container>
+      <h1 className=''>{currentSeasonName}</h1>
       <div className='table-responsive'>
         <table className='oldStatsTable'>
           <thead>

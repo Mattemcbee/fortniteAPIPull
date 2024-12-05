@@ -60,6 +60,15 @@
 margin-top:20px;
 margin-bottom: 40px;
 }
+.courtText {
+  background-color: var(--color5);
+  color: black;
+  padding: 10px;
+  text-align: left;
+  border-radius: 20px;
+margin-top:20px;
+margin-bottom: 40px;
+}
 
 .rankingText:hover {
   background-color: #b4ecf3;
@@ -238,6 +247,10 @@ margin-bottom: 40px;
   color:var(--color2);
   background-color:var(--color1) ;
 
+}
+.CrimeList {
+  font-size: 20px;
+  font-family: Arial;
 }
 .minutesText {
   color: var(--color5);

@@ -13,6 +13,8 @@ import OldSeasonDisplay from './oldSeasonDisplay.jsx';
 import Popup from './popup.jsx'; // Import the Popup component
 import Webdown from './webdown'
 import Email from './email.js'
+import CourtEmail from './submitFortCourt.js'
+import MugshotDisplay from './mugshotsDisplay'
 
 function SeasonStats({ isBlackAndWhite, toggleTheme }) {
   const [playerStats, setPlayerStats] = useState([]);
@@ -296,6 +298,8 @@ function SeasonStats({ isBlackAndWhite, toggleTheme }) {
             <CombinedList playerStats={playerStats} />
           </Container>
           <Email />
+          <CourtEmail/>
+          <MugshotDisplay />
         </>
       )}
       <h2 className='tagFont text-center' style={{marginTop: '30px'}}>Brought to you by Matt. Thank you Matt</h2>

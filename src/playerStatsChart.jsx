@@ -57,7 +57,7 @@ function PlayerStatsChart() {
     const levelMap = {};
     const datasets = data.map((entry, index) => {
       const nextColor = getNextColor();
-      const playerName = ['Aaron', 'Andrew', 'Josh', 'Tommy', 'Matt', 'Nick', 'Panna'][index % 7];
+      const playerName = ['Aaron', 'Andrew', 'Matt', 'Nick', 'Panna', 'Tommy'][index % 7];
       
       entry.stats.forEach(stat => {
         // Initialize level data if it doesn't exist
