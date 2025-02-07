@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import emailjs from 'emailjs-com';
 import { Form, Input, TextArea, Button } from 'semantic-ui-react';
 import Swal from 'sweetalert2';
@@ -9,6 +9,8 @@ const TEMPLATE_ID = 'template_h2krjji'
 const USER_ID = 'K1UrWt6oQw2mLfS8m'
 
 const Email = () => {
+    const [caseNumber, setCaseNumber] = useState(() => Math.floor(Math.random() * 1001));
+    
     const handleOnSubmit = (e) => {
         e.preventDefault();
         emailjs.sendForm(SERVICE_ID, TEMPLATE_ID, e.target, USER_ID)
@@ -27,12 +29,17 @@ const Email = () => {
                 })
             });
         e.target.reset()
+        setCaseNumber(Math.floor(Math.random() * 1001));
+
     };
 
     return (
         <>
             <Form  className='ticketText' onSubmit={handleOnSubmit}>
                 <h1 className='EmailHeader mediumTitle mb-0'></h1>
+                <h1 style={{fontSize:'10px', marginTop:'20px'}}>Case Number: {caseNumber}</h1>
+                <input type="hidden" name="case_number" value={caseNumber} />
+
                 <Form.Field
                     id='form-input-control-email'
                     control={Input}

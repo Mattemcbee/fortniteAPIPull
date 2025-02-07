@@ -48,31 +48,35 @@ function SeasonStats({ isBlackAndWhite, toggleTheme }) {
     try {
       const apiKey = '60729e20-c6f7-4b8c-83fc-d1f2b7e1a265';
       const allStats = [];
-      for (let i = 0; i < playerDict.length; i++) {
-        const { name: playerName, playerTag, accountType } = playerDict[i];
-
+      const MAX_RETRIES = 5;
+      const CONCURRENCY_LIMIT = 1; // Number of simultaneous requests
+      const DELAY_MS = 50; // Delay between requests in milliseconds
+  
+      const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+  
+      const fetchWithRetry = async (player, retries = 0) => {
+        const { name: playerName, playerTag, accountType } = player;
+        const url = `https://fortnite-api.com/v2/stats/br/v2?name=${playerTag}&timeWindow=season&accountType=${accountType}`;
+  
         try {
-          const response = await fetch(
-            `https://fortnite-api.com/v2/stats/br/v2?name=${playerTag}&timeWindow=season&accountType=${accountType}`,
-            { headers: { Authorization: apiKey } }
-          );
-          if (!response.ok) throw new Error(`Failed to fetch player stats for ${playerName}`);
-
+          const response = await fetch(url, { headers: { Authorization: apiKey } });
+          if (!response.ok) throw new Error(`Failed to fetch stats for ${playerName}`);
+  
           const data = await response.json();
           if (!data.data) throw new Error(`No data found for ${playerName}`);
-
+  
           const stats = data.data.stats ? data.data.stats.all.overall : {};
           const level = data.data.battlePass ? data.data.battlePass.level : 'N/A';
           const kd = stats.kd ? parseFloat(stats.kd).toFixed(2) : 'N/A';
           const kills = stats.kills ? parseFloat(stats.kills) : 'N/A';
           const wins = stats.wins ? parseFloat(stats.wins) : 'N/A';
-          const matches = stats.matches ? stats.matches : 0; // Ensure matches is a number
+          const matches = stats.matches ? stats.matches : 0;
           const scorePerMatch = stats.scorePerMatch ? stats.scorePerMatch : 'N/A';
           const top3 = stats.top3 ? stats.top3 : 'N/A';
           const top3per = matches !== 0 ? ((top3 / matches) * 100).toFixed(1) : 'N/A';
           const minutesPlayed = stats.minutesPlayed ? stats.minutesPlayed : 'N/A';
-
-          allStats.push({
+  
+          return {
             name: playerName,
             playerTag,
             level,
@@ -84,26 +88,55 @@ function SeasonStats({ isBlackAndWhite, toggleTheme }) {
             top3per,
             scorePerMatch,
             minutesPlayed,
-          });
+          };
         } catch (error) {
-          console.error(`Error fetching stats for player ${playerName}:`, error);
-          allStats.push({ name: playerName, level: 1, kd: 0, matches: 0 });
+          if (retries < MAX_RETRIES) {
+            console.warn(`Retrying ${playerName} (${retries + 1}/${MAX_RETRIES})...`);
+            await delay(DELAY_MS); // Wait before retrying
+            return await fetchWithRetry(player, retries + 1);
+          } else {
+            console.error(`Failed to fetch stats for ${playerName} after ${MAX_RETRIES} retries:`, error);
+            return { name: playerName, level: 1, kd: 0, matches: 0 };
+          }
         }
-
-        await new Promise(resolve => setTimeout(resolve, 700));
-      }
-
+      };
+  
+      const executeWithLimit = async (players, limit) => {
+        const results = [];
+        const pool = [];
+  
+        for (const player of players) {
+          const promise = fetchWithRetry(player).then((result) => results.push(result));
+          pool.push(promise);
+  
+          // Wait for the pool to have fewer active promises than the limit
+          if (pool.length >= limit) {
+            await Promise.race(pool);
+            pool.splice(pool.findIndex((p) => p === promise), 1);
+          }
+  
+          await delay(DELAY_MS); // Wait before initiating the next request
+        }
+  
+        await Promise.all(pool);
+        return results;
+      };
+  
+      const fetchedStats = await executeWithLimit(playerDict, CONCURRENCY_LIMIT);
+  
+      // Process fetched stats
+      fetchedStats.forEach((stat) => allStats.push(stat));
+  
       allStats.sort((a, b) => b.level - a.level);
       setPlayerStats(allStats);
-
+  
       const totalKills = allStats.reduce((sum, player) => sum + (isNaN(player.kills) ? 0 : parseFloat(player.kills)), 0);
       setTotalKills(totalKills);
-
+  
       const totalMatches = allStats.reduce((sum, player) => sum + (isNaN(player.matches) ? 0 : parseInt(player.matches)), 0);
-      setTotalMatches(totalMatches); 
-
+      setTotalMatches(totalMatches);
+  
       const kdSort = [...allStats].sort((a, b) => b.kd - a.kd);
-
       setkdStats(kdSort);
     } catch (error) {
       setError(error.message);
@@ -111,7 +144,7 @@ function SeasonStats({ isBlackAndWhite, toggleTheme }) {
       setLoading(false);
     }
   };
-
+    
   useEffect(() => {
     fetchSeasonStats();
   }, []);
@@ -153,7 +186,8 @@ function SeasonStats({ isBlackAndWhite, toggleTheme }) {
 
     return (
     <>
-      <Container style={{ textAlign: 'left', padding: '10px', paddingBottom: '40px' }}>
+      <Container style={{ textAlign: 'left', padding: '10px', paddingBottom: '30px' }}>
+
         <Container>
           {filteredKDStats.map((player, index) => (
 
@@ -195,6 +229,8 @@ function SeasonStats({ isBlackAndWhite, toggleTheme }) {
               )}
             </div>
           ))}
+                <h1 className='minScoreDisplay'>Min Games: {Math.ceil((totalMatches/7)*.4)} </h1>
+
         </Container>
         
 
