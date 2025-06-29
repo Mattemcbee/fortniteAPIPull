@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import playerDict from './player_list.js';
 import logo from './flogo.png';
 import './style.css';
-import { Row, Col, Container, Button } from 'reactstrap';
+import { Row, Col, Container, Button, Table } from 'reactstrap';
 import InspirationRandom from './inspirationRandom.jsx';
 import killList from './total_kill_list.js';
 import PlayerStatsChart from './playerStatsChart.jsx';
@@ -19,9 +19,13 @@ import MugshotDisplay from './mugshotsDisplay'
 function SeasonStats({ isBlackAndWhite, toggleTheme }) {
   const [playerStats, setPlayerStats] = useState([]);
   const [kdStats, setkdStats] = useState([]);
+  const [squadKD, squadKDStats] = useState([]);
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [expandedPlayerIndex, setExpandedPlayerIndex] = useState(-1);
+    const [squadViewToggle, setSquadViewToggle] = useState(-1);
+
   const [totalKills, setTotalKills] = useState(0);
   const [totalMatches, setTotalMatches] = useState(0); // Add state for total matches
   const [showKillList, setShowKillList] = useState(false);
@@ -31,7 +35,9 @@ function SeasonStats({ isBlackAndWhite, toggleTheme }) {
   const togglePlayerExpand = index => {
     setExpandedPlayerIndex(expandedPlayerIndex === index ? -1 : index);
   };
-
+  const toggleSquadView  = () => {
+    setSquadViewToggle(squadViewToggle => !squadViewToggle);
+  };
   const toggleOldSeasonDisplay = () => {
     setShowOldSeason(prevShowOldSeason => !prevShowOldSeason);
   };
@@ -51,20 +57,21 @@ function SeasonStats({ isBlackAndWhite, toggleTheme }) {
       const MAX_RETRIES = 5;
       const CONCURRENCY_LIMIT = 1; // Number of simultaneous requests
       const DELAY_MS = 50; // Delay between requests in milliseconds
-  
+
       const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-  
+
       const fetchWithRetry = async (player, retries = 0) => {
         const { name: playerName, playerTag, accountType } = player;
         const url = `https://fortnite-api.com/v2/stats/br/v2?name=${playerTag}&timeWindow=season&accountType=${accountType}`;
-  
+
         try {
           const response = await fetch(url, { headers: { Authorization: apiKey } });
           if (!response.ok) throw new Error(`Failed to fetch stats for ${playerName}`);
-  
+
           const data = await response.json();
           if (!data.data) throw new Error(`No data found for ${playerName}`);
-  
+          console.log(data)
+          const squadKD = data.data.stats ? data.data.stats.all.squad.kd : 'N/A';
           const stats = data.data.stats ? data.data.stats.all.overall : {};
           const level = data.data.battlePass ? data.data.battlePass.level : 'N/A';
           const kd = stats.kd ? parseFloat(stats.kd).toFixed(2) : 'N/A';
@@ -75,7 +82,18 @@ function SeasonStats({ isBlackAndWhite, toggleTheme }) {
           const top3 = stats.top3 ? stats.top3 : 'N/A';
           const top3per = matches !== 0 ? ((top3 / matches) * 100).toFixed(1) : 'N/A';
           const minutesPlayed = stats.minutesPlayed ? stats.minutesPlayed : 'N/A';
-  
+          //const killsLTM = data.data.stats.all.ltm.kills ? data.data.stats.all.ltm.kills : 'N/A';
+          const deaths = stats.wins ? parseFloat(stats.matches)-parseFloat(stats.wins) : 'N/A';
+          const killsLTM = stats.kills ? parseFloat(data.data.stats.all.ltm.kills) : 'N/A';
+          const deathsLTM = stats.kills ? parseFloat(data.data.stats.all.ltm.matches)-parseFloat(data.data.stats.all.ltm.wins) : 'N/A';
+          const matchemsLTM = parseFloat(data.data.stats.all.ltm.matches);
+          const overallMatches = matches-matchemsLTM;
+          const overallKills = kills-killsLTM;
+          const overallDeaths = deaths-deathsLTM;
+          const overallKD= overallKills/overallDeaths;
+
+          //console.log(parseFloat(stats.kills)/parseFloat(stats.matches), 'kd' , data.data.account.name, stats.kills, 'kills', stats.matches, 'matches', deaths, ':deaths' )
+          console.log('killsltm: ',killsLTM, 'deathsLTM:', deathsLTM, 'kd: ', (killsLTM/deathsLTM) )
           return {
             name: playerName,
             playerTag,
@@ -88,6 +106,10 @@ function SeasonStats({ isBlackAndWhite, toggleTheme }) {
             top3per,
             scorePerMatch,
             minutesPlayed,
+            squadKD,
+            overallKills,
+            overallMatches,
+            overallKD
           };
         } catch (error) {
           if (retries < MAX_RETRIES) {
@@ -100,51 +122,56 @@ function SeasonStats({ isBlackAndWhite, toggleTheme }) {
           }
         }
       };
-  
+
       const executeWithLimit = async (players, limit) => {
         const results = [];
         const pool = [];
-  
+
         for (const player of players) {
           const promise = fetchWithRetry(player).then((result) => results.push(result));
           pool.push(promise);
-  
+
           // Wait for the pool to have fewer active promises than the limit
           if (pool.length >= limit) {
             await Promise.race(pool);
             pool.splice(pool.findIndex((p) => p === promise), 1);
           }
-  
+
           await delay(DELAY_MS); // Wait before initiating the next request
         }
-  
+
         await Promise.all(pool);
         return results;
       };
-  
+
       const fetchedStats = await executeWithLimit(playerDict, CONCURRENCY_LIMIT);
-  
+
       // Process fetched stats
       fetchedStats.forEach((stat) => allStats.push(stat));
-  
+
       allStats.sort((a, b) => b.level - a.level);
       setPlayerStats(allStats);
-  
-      const totalKills = allStats.reduce((sum, player) => sum + (isNaN(player.kills) ? 0 : parseFloat(player.kills)), 0);
+
+      const totalKills = allStats.reduce((sum, player) => sum + (isNaN(player.overallKills) ? 0 : parseFloat(player.overallKills)), 0);
       setTotalKills(totalKills);
-  
-      const totalMatches = allStats.reduce((sum, player) => sum + (isNaN(player.matches) ? 0 : parseInt(player.matches)), 0);
+
+      const totalMatches = allStats.reduce((sum, player) => sum + (isNaN(player.overallMatches) ? 0 : parseInt(player.overallMatches)), 0);
       setTotalMatches(totalMatches);
-  
-      const kdSort = [...allStats].sort((a, b) => b.kd - a.kd);
+      console.log(totalMatches, 'total matches')
+
+      const kdSort = [...allStats].sort((a, b) => b.overallKD - a.overallKD);
       setkdStats(kdSort);
+      const squadkdSort = [...allStats].sort((a, b) => b.squadKD - a.squadKD);
+      squadKDStats(squadkdSort);
+
+
     } catch (error) {
       setError(error.message);
     } finally {
       setLoading(false);
     }
   };
-    
+
   useEffect(() => {
     fetchSeasonStats();
   }, []);
@@ -178,17 +205,72 @@ function SeasonStats({ isBlackAndWhite, toggleTheme }) {
 
 
   // Separate players based on match count
-  const highMatchPlayers = playerStats.filter(player => parseInt(player.matches) >= (totalMatches/7)*.4);
-  const lowMatchPlayers = playerStats.filter(player => parseInt(player.matches) < (totalMatches/7)*.4);
+  const highMatchPlayers = playerStats.filter(player => parseInt(player.overallMatches) >= (totalMatches / 9) * .4);
+  const lowMatchPlayers = playerStats.filter(player => parseInt(player.overallMatches) < (totalMatches / 9) * .4);
   //console.log((totalMatches/7)*.4)
   // Filtered KD stats for players with 10 or more matches
   const filteredKDStats = kdStats.filter(player => highMatchPlayers.some(p => p.name === player.name));
 
-    return (
+  return (
     <>
-      <Container style={{ textAlign: 'left', padding: '10px', paddingBottom: '30px' }}>
+      <Container fluid style={{ textAlign: 'left', padding: '10px', paddingBottom: '30px' }}>
+            
+            {!squadViewToggle && (
+<Container fluid>
+          <h2 className='tableTextColorComparison'>Ranked K/D Table - Squads</h2>
+
+          {squadKD.map((player, index) => (
+
+            <div key={index}>
+              <Container className='upZ'>
+                
+                <Row
+                  className={`rankingText ${expandedPlayerIndex === index ? 'expanded' : ''}`}
+                  onClick={() => togglePlayerExpand(index)}
+                  style={{ zIndex: 4, marginTop: '10px' }}
+                >
+                  <Col xs='1' className='numberFont'>{index + 1}.</Col>
+                  <Col xs='9'>
+                    <Row>
+                      <Col>
+                        <h1 className='nameFont'>{player.name}</h1>
+                        <h1 className='statsFont'>
+                          <strong>K/D:</strong> {player.overallKD.toFixed(2)}, <strong>Level:</strong> {player.level},{' '}
+                          <strong>Games Played:</strong> {player.matches}
+                        </h1>
+                      </Col>
+                    </Row>
+                  </Col>
+                </Row>
+              </Container>
+              
+              {expandedPlayerIndex === index && (
+                <Container className='downZ'>
+                  <Row className='expandedText statsRow' style={{ zIndex: 0 }}>
+                    <Col xs={{ offset: 1, size: 9 }}>
+                      <div className={`statsContainer slide-down`}>
+                        <h3 className='statsFontExpand'>
+                          <h3 className='statsFontExpandTag'>{player.playerTag}</h3>
+                          <strong>Kills:</strong> {player.kills}, <strong>Wins:</strong> {player.wins === 'N/A' ? 0 : player.wins}, <br />
+                          <strong>Top 3:</strong> {player.top3} ({player.top3per}%), <br />
+                          <strong>Squad K/D:</strong> {player.squadKD}
+                        </h3>
+                      </div>
+                    </Col>
+                  </Row>
+                </Container>
+              )}
+            </div>
+          ))}
+          <h1 className='minScoreDisplay'>Min Games: {Math.ceil((totalMatches / 9) * .4)} </h1>
+
+        </Container>
+            )}
+                        {squadViewToggle && (
 
         <Container>
+                    <h2 className='tableTextColorComparison'>Ranked K/D Table - Overall</h2>
+
           {filteredKDStats.map((player, index) => (
 
             <div key={index}>
@@ -204,7 +286,7 @@ function SeasonStats({ isBlackAndWhite, toggleTheme }) {
                       <Col>
                         <h1 className='nameFont'>{player.name}</h1>
                         <h1 className='statsFont'>
-                          <strong>K/D:</strong> {player.kd}, <strong>Level:</strong> {player.level},{' '}
+                          <strong>K/D:</strong> {player.overallKD.toFixed(2)}, <strong>Level:</strong> {player.level},{' '}
                           <strong>Games Played:</strong> {player.matches}
                         </h1>
                       </Col>
@@ -220,7 +302,8 @@ function SeasonStats({ isBlackAndWhite, toggleTheme }) {
                         <h3 className='statsFontExpand'>
                           <h3 className='statsFontExpandTag'>{player.playerTag}</h3>
                           <strong>Kills:</strong> {player.kills}, <strong>Wins:</strong> {player.wins === 'N/A' ? 0 : player.wins}, <br />
-                          <strong>Top 3:</strong> {player.top3} ({player.top3per}%)
+                          <strong>Top 3:</strong> {player.top3} ({player.top3per}%), <br />
+                          <strong>Squad K/D:</strong> {player.squadKD}
                         </h3>
                       </div>
                     </Col>
@@ -229,12 +312,13 @@ function SeasonStats({ isBlackAndWhite, toggleTheme }) {
               )}
             </div>
           ))}
-                <h1 className='minScoreDisplay'>Min Games: {Math.ceil((totalMatches/7)*.4)} </h1>
+          <h1 className='minScoreDisplay'>Min Games: {Math.ceil((totalMatches / 9) * .4)} </h1>
 
         </Container>
-        
 
-       {/* <div className='separator' style={{ borderTop: '2px solid red', margin: '20px 0' }} /> */}
+        )}
+        {/* <div className='separator' style={{ borderTop: '2px solid red', margin: '20px 0' }} /> */}
+            {squadViewToggle && (
 
         <Container>
           {lowMatchPlayers.map((player, index) => (
@@ -245,22 +329,22 @@ function SeasonStats({ isBlackAndWhite, toggleTheme }) {
                 style={{ zIndex: 4, marginTop: '10px' }}
               >
                 <Col xs='3' className='alignVertical'>
-                  <h1 style={{color: 'red', fontSize: 'small'}}>NOT ENOUGH MATCHES</h1>
+                  <h1 style={{ color: 'red', fontSize: 'small' }}>NOT ENOUGH MATCHES</h1>
                 </Col>
                 <Col xs='9'>
                   <Row>
                     <Col>
                       <h1 className='nameFont'>{player.name}</h1>
                       <h1 className='statsFont'>
-                        <strong>K/D:</strong> {player.kd}, <strong>Level:</strong> {player.level},{' '}
-                        <strong>Games:</strong> {player.matches}<span style={{color:'grey', fontSize:'smaller'}}>/{Math.ceil((totalMatches/7)*.4)}</span>
+                        <strong>K/D:</strong> {player.overallKD}, <strong>Level:</strong> {player.level},{' '}
+                        <strong>Games:</strong> {player.matches}<span style={{ color: 'grey', fontSize: 'smaller' }}>/{Math.ceil((totalMatches / 9) * .4)}</span>
                       </h1>
                     </Col>
                   </Row>
                 </Col>
               </Row>
               {expandedPlayerIndex === index + highMatchPlayers.length && (
-                <Container fluid className='downZ' style={{marginLeft:'-12px'}}>
+                <Container fluid className='downZ' style={{ marginLeft: '-12px' }}>
                   <Row className='expandedText statsRow' style={{ zIndex: 0 }}>
                     <Col xs={{ offset: 1, size: 9 }}>
                       <div className={`statsContainer slide-down`}>
@@ -277,12 +361,28 @@ function SeasonStats({ isBlackAndWhite, toggleTheme }) {
             </Container>
           ))}
         </Container>
-        
+                        
+                      )}
+
         {/*<Webdown/>*/}
+
       </Container>
 
       <Container fluid className='buttonContainer text-center'>
         <Row className='' style={{ marginTop: '0px' }}>
+          <Col>
+          <Button
+              onClick={toggleSquadView}
+              className='buttonStyle'
+              style={{
+                color: isBlackAndWhite ? 'black' : 'white',
+                backgroundColor: isBlackAndWhite ? 'white' : '#b3c5c8',
+                marginBottom: '20px'
+              }}
+            >
+              {squadViewToggle ? 'Squad View' : 'Overall View'}
+            </Button>
+            </Col>
           <Col>
             <Button
               onClick={toggleKillList}
@@ -315,6 +415,34 @@ function SeasonStats({ isBlackAndWhite, toggleTheme }) {
 
       {showKillList && (
         <>
+        {/*
+          <h2 className='headerTextColorComparison'>K/D in Squad Only</h2>
+
+          <Table striped bordered hover responsive className='text-center'>
+            <thead>
+
+              <tr>
+                <th>Rank</th>
+                <th>Player Name</th>
+                <th>Squad K/D</th>
+              </tr>
+            </thead>
+            <tbody>
+             {[...squadKD]
+  .filter(player => player.squadKD !== undefined && !isNaN(player.squadKD))
+  .sort((a, b) => b.squadKD - a.squadKD)
+  .map((player, index) => (
+    <tr key={player.name}>
+      <td>{index + 1}</td>
+      <td>{player.name}</td>
+      <td>{parseFloat(player.squadKD).toFixed(2)}</td>
+    </tr>
+  ))}
+
+            </tbody>
+          </Table>
+           */}
+
           <h2 className='headerTextColorComparison'>Comparison with Historical Deaths:</h2>
           {updatedKillList.map((kill, index) => (
             <Row key={index} className={kill.battle === 'Our total kills this season' ? 'yellowRow' : 'otherRow'}>
@@ -334,11 +462,11 @@ function SeasonStats({ isBlackAndWhite, toggleTheme }) {
             <CombinedList playerStats={playerStats} />
           </Container>
           <Email />
-          <CourtEmail/>
+          <CourtEmail />
           <MugshotDisplay />
         </>
       )}
-      <h2 className='tagFont text-center' style={{marginTop: '30px'}}>Brought to you by Matt. Thank you Matt</h2>
+      <h2 className='tagFont text-center' style={{ marginTop: '30px' }}>Brought to you by Matt. Thank you Matt</h2>
     </>
   );
 }

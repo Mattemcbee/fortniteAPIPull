@@ -9,6 +9,9 @@ const playerDict = [
   { name: 'Nick', playerTag: 'TheOGNickTSB',accountType:'epic' },
   { name: 'Matt', playerTag: '69hogcranker69',accountType:'epic' },
   { name: 'Josh', playerTag: 'bodaciousbunny22',accountType:'psn' },
+  { name: 'Clay', playerTag: 'unfurledrelic',accountType:'epic' },
+  { name: 'Will', playerTag: 'bigbeefy47',accountType:'epic' },
+  
 
 ];
 
